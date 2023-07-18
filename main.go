@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-    "os"
-    "time"
+	"os"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -25,31 +25,31 @@ func main() {
 type errMsg error
 
 type model struct {
-	textarea textarea.Model
-    textinput textinput.Model
-    timer timer.Model
-    message string
-	err      error
+	textarea  textarea.Model
+	textinput textinput.Model
+	timer     timer.Model
+	message   string
+	err       error
 }
 
 func initialModel() model {
-    t := timer.NewWithInterval(timeout, time.Second)
+	t := timer.NewWithInterval(timeout, time.Second)
 	ta := textarea.New()
 	ta.Placeholder = "Burst entry here..."
 	ta.Focus()
-    ti := textinput.New()
+	ti := textinput.New()
 
 	return model{
-        timer: t,
-		textarea: ta,
-        textinput: ti,
-		err:      nil,
-        message: "",
+		timer:     t,
+		textarea:  ta,
+		textinput: ti,
+		err:       nil,
+		message:   "",
 	}
 }
 
 func (m model) Init() tea.Cmd {
-    return m.timer.Init()
+	return m.timer.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -61,17 +61,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.timer, cmd = m.timer.Update(msg)
 		return m, cmd
-    case timer.TimeoutMsg:
-        m.textinput.Focus()
+	case timer.TimeoutMsg:
+		m.textinput.Focus()
 	case tea.KeyMsg:
 		switch msg.Type {
-        case tea.KeyEnter:
-            if m.timer.Timedout() {
-                if len(m.textinput.Value()) > 0 {
-                    os.WriteFile(m.textinput.Value(), []byte(m.textarea.Value()), 0644)
-                }
-            }
-            return m, tea.Quit
+		case tea.KeyEnter:
+			if m.timer.Timedout() {
+				if len(m.textinput.Value()) > 0 {
+					os.WriteFile(m.textinput.Value(), []byte(m.textarea.Value()), 0644)
+				}
+				return m, tea.Quit
+			}
 		case tea.KeyEsc:
 			if m.textarea.Focused() {
 				m.textarea.Blur()
@@ -90,27 +90,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-    if m.timer.Timedout() {
-        m.textinput, cmd = m.textinput.Update(msg)
-    } else {
-        m.textarea, cmd = m.textarea.Update(msg)
-    }
+	if m.timer.Timedout() {
+		m.textinput, cmd = m.textinput.Update(msg)
+	} else {
+		m.textarea, cmd = m.textarea.Update(msg)
+	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
 func (m model) View() string {
-    if m.timer.Timedout() {
-        return fmt.Sprintf(
-            "Time is up!\n\n%s\n\n%s %s",
-            m.textarea.View(),
-            "Enter filename:",
-            m.textinput.View(),
-        ) + "\n\n"
-    }
+	if m.timer.Timedout() {
+		return fmt.Sprintf(
+			"Time is up!\n\n%s\n\n%s %s",
+			m.textarea.View(),
+			"Enter filename:",
+			m.textinput.View(),
+		) + "\n\n"
+	}
 	return fmt.Sprintf(
 		"You have %s to write your burst.\n\n%s\n\n%s",
-        m.timer.View(),
+		m.timer.View(),
 		m.textarea.View(),
 		"(ctrl+c to quit)",
 	) + "\n\n"
