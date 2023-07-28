@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textarea"
@@ -28,6 +29,7 @@ type model struct {
 	textarea  textarea.Model
 	textinput textinput.Model
 	timer     timer.Model
+	wpm       int
 	message   string
 	err       error
 }
@@ -43,6 +45,7 @@ func initialModel() model {
 		timer:     t,
 		textarea:  ta,
 		textinput: ti,
+		wpm:       0,
 		err:       nil,
 		message:   "",
 	}
@@ -62,6 +65,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.timer, cmd = m.timer.Update(msg)
 		return m, cmd
 	case timer.TimeoutMsg:
+		m.wpm = len(strings.Fields(m.textarea.Value())) * (int(time.Minute) / int(timeout))
 		m.textinput.Focus()
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -102,7 +106,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if m.timer.Timedout() {
 		return fmt.Sprintf(
-			"Time is up!\n\n%s\n\n%s %s",
+			"Time is up! Your wpm was %d\n\n%s\n\n%s %s",
+			m.wpm,
 			m.textarea.View(),
 			"Enter filename:",
 			m.textinput.View(),
